@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#1a0f1f" />
+    <title>不再是陌生人 · We Are Not Strangers (lite)</title>
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="preconnect" href="https://www.gstatic.com" />
+  </head>
+  <body>
+    <!-- Global lang toggle (always visible top-right) -->
+    <button id="lang-toggle" class="lang-toggle-global" type="button" aria-label="切換語言 / Switch language">
+      <span id="lang-toggle-label">EN</span>
+    </button>
+
+    <main id="app">
+      <!-- ========== Landing ========== -->
+      <section class="screen" data-screen="landing">
+        <header class="brand">
+          <div class="logo-dot"></div>
+          <h1>
+            <span data-i18n="brand_title">不再是陌生人</span><span class="brand-sub">lite</span>
+          </h1>
+          <p class="tagline" data-i18n="tagline">一個讓你慢慢靠近的房間</p>
+        </header>
+
+        <div class="card-stack">
+          <button class="big-btn primary" data-action="create">
+            <span class="big-btn-title">Create a room</span>
+          </button>
+          <button class="big-btn" data-action="join">
+            <span class="big-btn-title">Join a room</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ========== Name + Join ========== -->
+      <section class="screen hidden" data-screen="name">
+        <header class="brand small">
+          <h2 id="name-screen-title" data-i18n="name_title_create">你叫什麼名字?</h2>
+        </header>
+        <div class="form-card">
+          <label class="field">
+            <span data-i18n="name_label">暱稱 / Your name</span>
+            <input id="input-name" type="text" maxlength="14" autocomplete="off" data-i18n-placeholder="name_placeholder" placeholder="輸入 1–14 字" />
+          </label>
+          <label class="field" id="pin-field" hidden>
+            <span data-i18n="pin_label">房間 PIN</span>
+            <input id="input-pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" data-i18n-placeholder="pin_placeholder" placeholder="4 位數字" />
+          </label>
+          <div class="form-actions">
+            <button class="ghost-btn" data-action="back-landing" data-i18n="back">返回</button>
+            <button class="primary big-btn" data-action="submit-name" data-i18n="confirm">確認</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== Lobby ========== -->
+      <section class="screen hidden" data-screen="lobby">
+        <header class="brand small">
+          <h2 data-i18n="lobby_title">等待大家進來…</h2>
+          <p class="tagline" id="lobby-hint" data-i18n="lobby_hint">用 PIN 加入房間</p>
+        </header>
+
+        <div class="pin-card" id="pin-card">
+          <div class="pin-label" data-i18n="pin_label_lobby">房間 PIN</div>
+          <div class="pin-value" id="pin-display">----</div>
+        </div>
+
+        <div class="players-card">
+          <div class="players-label">
+            <span data-i18n="players_label">玩家</span>
+            <span class="player-count-bubble" id="player-count">0</span>
+          </div>
+          <ul class="players-list" id="players-list"></ul>
+        </div>
+
+        <div class="lobby-controls">
+          <button class="primary big-btn" id="start-btn" disabled>
+            <span class="big-btn-title" data-i18n="start">開始</span>
+          </button>
+          <button class="ghost-btn small" id="leave-lobby" data-i18n="leave">離開房間</button>
+        </div>
+      </section>
+
+      <!-- ========== Game ========== -->
+      <section class="screen hidden" data-screen="game">
+        <div class="card-area">
+          <article class="qcard" id="qcard">
+            <div class="qcard-theme" id="qcard-theme">
+              <span class="qcard-theme-zh" id="qcard-theme-zh"></span>
+              <span class="qcard-theme-dot">·</span>
+              <span class="qcard-theme-en" id="qcard-theme-en"></span>
+            </div>
+            <div class="qcard-text" id="qcard-text">
+              <div class="qcard-text-zh" id="qcard-text-zh"></div>
+              <div class="qcard-text-en" id="qcard-text-en"></div>
+            </div>
+          </article>
+        </div>
+
+        <div class="action-bar">
+          <button class="ghost-btn" id="game-leave" data-i18n="game_leave">離開</button>
+          <button class="primary" id="btn-next" hidden data-i18n="btn_next">下一題 →</button>
+          <div class="waiting-note" id="waiting-note" hidden></div>
+        </div>
+
+        <!-- Theme intro overlay -->
+        <div class="theme-overlay" id="theme-overlay" aria-hidden="true">
+          <span class="theme-overlay-text" id="theme-overlay-text">
+            <span class="theme-overlay-zh" id="theme-overlay-zh"></span>
+            <span class="theme-overlay-en" id="theme-overlay-en"></span>
+          </span>
+        </div>
+      </section>
+
+      <!-- ========== Toast ========== -->
+      <div id="toast" class="toast hidden"></div>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
