@@ -35,22 +35,40 @@
         </div>
       </section>
 
-      <!-- ========== Name + Join ========== -->
+      <!-- ========== PIN entry (OTP-style 4-box input) ========== -->
+      <section class="screen hidden" data-screen="pin">
+        <header class="brand small">
+          <h2 data-i18n="pin_title">輸入房間 PIN</h2>
+          <p class="tagline" data-i18n="pin_tagline">朋友給你的 4 位數字</p>
+        </header>
+        <div class="otp-stage">
+          <div class="otp-input-row" id="otp-row">
+            <input class="otp-box" data-otp="0" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code" aria-label="digit 1" />
+            <input class="otp-box" data-otp="1" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="digit 2" />
+            <input class="otp-box" data-otp="2" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="digit 3" />
+            <input class="otp-box" data-otp="3" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="digit 4" />
+          </div>
+          <div class="otp-status" id="otp-status" hidden></div>
+          <button class="ghost-btn small" data-action="back-landing" data-i18n="back">返回</button>
+        </div>
+      </section>
+
+      <!-- ========== Name entry ========== -->
       <section class="screen hidden" data-screen="name">
         <header class="brand small">
           <h2 id="name-screen-title" data-i18n="name_title_create">你叫什麼名字?</h2>
+          <div class="room-pin-pill" id="room-pin-pill" hidden>
+            <span data-i18n="room_pin_label">Room</span>
+            <span class="room-pin-pill-value" id="room-pin-pill-value">----</span>
+          </div>
         </header>
         <div class="form-card">
           <label class="field">
             <span data-i18n="name_label">暱稱 / Your name</span>
             <input id="input-name" type="text" maxlength="14" autocomplete="off" data-i18n-placeholder="name_placeholder" placeholder="輸入 1–14 字" />
           </label>
-          <label class="field" id="pin-field" hidden>
-            <span data-i18n="pin_label">房間 PIN</span>
-            <input id="input-pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" data-i18n-placeholder="pin_placeholder" placeholder="4 位數字" />
-          </label>
           <div class="form-actions">
-            <button class="ghost-btn" data-action="back-landing" data-i18n="back">返回</button>
+            <button class="ghost-btn" data-action="name-back" data-i18n="back">返回</button>
             <button class="primary big-btn" data-action="submit-name" data-i18n="confirm">確認</button>
           </div>
         </div>

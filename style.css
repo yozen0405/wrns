@@ -205,6 +205,119 @@ body {
   font-size: 12px;
 }
 
+/* ---------- OTP-style PIN entry ---------- */
+.otp-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+  margin-top: 6vh;
+}
+.otp-input-row {
+  display: flex;
+  gap: 12px;
+}
+.otp-box {
+  width: 62px;
+  height: 78px;
+  font-size: 38px;
+  font-family: ui-monospace, "SF Mono", "Menlo", "Consolas", monospace;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--accent);
+  background: var(--surface);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  outline: none;
+  caret-color: var(--accent);
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.18s cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 0.25s ease;
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 0;
+}
+.otp-box::-webkit-outer-spin-button,
+.otp-box::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.otp-box:focus {
+  border-color: var(--accent);
+  background: var(--surface-2);
+  transform: translateY(-3px);
+  box-shadow:
+    0 10px 28px rgba(230, 161, 87, 0.22),
+    0 0 0 4px rgba(230, 161, 87, 0.12);
+}
+.otp-box.filled {
+  border-color: rgba(230, 161, 87, 0.55);
+  background: linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 100%);
+}
+.otp-box.filled:not(:focus) {
+  transform: translateY(0);
+}
+.otp-input-row.shake {
+  animation: otp-shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+@keyframes otp-shake {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(4px); }
+  30%, 50%, 70% { transform: translateX(-8px); }
+  40%, 60% { transform: translateX(8px); }
+}
+.otp-status {
+  font-size: 13px;
+  color: var(--ink-dim);
+  letter-spacing: 1px;
+  min-height: 18px;
+}
+.otp-status.checking {
+  color: var(--accent);
+}
+.otp-status.error {
+  color: var(--danger);
+}
+
+/* Mobile: shrink boxes so all 4 fit comfortably */
+@media (max-width: 380px) {
+  .otp-box {
+    width: 56px;
+    height: 70px;
+    font-size: 32px;
+  }
+  .otp-input-row {
+    gap: 8px;
+  }
+}
+
+/* Room-PIN pill (shown on name screen when joining) */
+.room-pin-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid rgba(230, 161, 87, 0.3);
+  color: var(--ink-soft);
+  padding: 6px 14px 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  margin: 10px auto 0;
+  text-transform: uppercase;
+}
+.room-pin-pill[hidden] { display: none; }
+.room-pin-pill-value {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---------- Form ---------- */
 .form-card {
   background: var(--surface);

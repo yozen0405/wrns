@@ -34,12 +34,14 @@ const I18N = {
     en: "A room to slowly come closer",
   },
   name_title_create: { zh: "你叫什麼名字?", en: "What's your name?" },
-  name_title_join: { zh: "輸入 PIN 加入", en: "Enter the PIN to join" },
   name_title_join_url: { zh: "輸入名字加入", en: "Enter your name to join" },
   name_label: { zh: "暱稱 / Your name", en: "Your name / 暱稱" },
   name_placeholder: { zh: "輸入 1–14 字", en: "1–14 characters" },
-  pin_label: { zh: "房間 PIN", en: "Room PIN" },
-  pin_placeholder: { zh: "4 位數字", en: "4 digits" },
+  pin_title: { zh: "輸入房間 PIN", en: "Enter the room PIN" },
+  pin_tagline: { zh: "朋友給你的 4 位數字", en: "The 4 digits your friend shared" },
+  pin_checking: { zh: "確認中…", en: "Checking…" },
+  pin_invalid: { zh: "找不到這個房間", en: "Room not found" },
+  room_pin_label: { zh: "房間", en: "Room" },
   back: { zh: "返回", en: "Back" },
   confirm: { zh: "確認", en: "Confirm" },
   lobby_title: { zh: "等待大家進來…", en: "Waiting for everyone…" },
@@ -123,6 +125,7 @@ const state = {
   myUid: null,
   myName: null,
   pendingAction: null,
+  pendingJoinPin: null,
   room: null,
   lang: "zh",
   unsubscribe: null,
@@ -188,9 +191,9 @@ function bindLanding() {
   $$('[data-action="create"]').forEach((b) =>
     b.addEventListener("click", () => {
       state.pendingAction = "create";
+      state.pendingJoinPin = null;
       setI18n($("#name-screen-title"), "name_title_create");
-      $("#pin-field").hidden = true;
-      $("#input-pin").value = "";
+      $("#room-pin-pill").hidden = true;
       $("#input-name").value = state.myName || "";
       showScreen("name");
       setTimeout(() => $("#input-name").focus(), 100);
@@ -200,16 +203,28 @@ function bindLanding() {
   $$('[data-action="join"]').forEach((b) =>
     b.addEventListener("click", () => {
       state.pendingAction = "join";
-      setI18n($("#name-screen-title"), "name_title_join");
-      $("#pin-field").hidden = false;
-      $("#input-name").value = state.myName || "";
-      showScreen("name");
-      setTimeout(() => $("#input-name").focus(), 100);
+      state.pendingJoinPin = null;
+      resetOtp();
+      showScreen("pin");
+      setTimeout(() => $$(".otp-box")[0]?.focus(), 150);
     })
   );
 
   $$('[data-action="back-landing"]').forEach((b) =>
     b.addEventListener("click", () => showScreen("landing"))
+  );
+
+  // "Back" on name screen: join flow returns to pin, create flow returns to landing
+  $$('[data-action="name-back"]').forEach((b) =>
+    b.addEventListener("click", () => {
+      if (state.pendingAction === "join") {
+        resetOtp();
+        showScreen("pin");
+        setTimeout(() => $$(".otp-box")[0]?.focus(), 150);
+      } else {
+        showScreen("landing");
+      }
+    })
   );
 
   $$('[data-action="submit-name"]').forEach((b) =>
@@ -219,9 +234,8 @@ function bindLanding() {
   $("#input-name").addEventListener("keydown", (e) => {
     if (e.key === "Enter") onSubmitName();
   });
-  $("#input-pin").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") onSubmitName();
-  });
+
+  bindOtp();
 
   // Global lang toggle
   $("#lang-toggle").addEventListener("click", () => {
@@ -252,14 +266,159 @@ async function onSubmitName() {
   if (state.pendingAction === "create") {
     await startAsHost(name);
   } else if (state.pendingAction === "join") {
-    const pin = $("#input-pin").value.trim();
-    if (!/^\d{4}$/.test(pin)) {
-      toast("need_pin");
-      $("#input-pin").focus();
+    const pin = state.pendingJoinPin;
+    if (!pin || !/^\d{4}$/.test(pin)) {
+      // PIN got lost somehow — bounce back to PIN screen
+      resetOtp();
+      showScreen("pin");
+      setTimeout(() => $$(".otp-box")[0]?.focus(), 150);
       return;
     }
     await startAsGuest(pin, name);
   }
+}
+
+// ============================================================
+// OTP input — 4-box PIN entry
+// ============================================================
+function resetOtp() {
+  $$(".otp-box").forEach((box) => {
+    box.value = "";
+    box.classList.remove("filled");
+  });
+  const status = $("#otp-status");
+  if (status) {
+    status.hidden = true;
+    status.textContent = "";
+    status.classList.remove("checking", "error");
+  }
+  const row = $("#otp-row");
+  if (row) row.classList.remove("shake");
+}
+
+function setOtpStatus(state, key) {
+  const status = $("#otp-status");
+  if (!status) return;
+  status.classList.remove("checking", "error");
+  if (!state) {
+    status.hidden = true;
+    status.textContent = "";
+    return;
+  }
+  status.hidden = false;
+  status.classList.add(state);
+  status.textContent = t(key);
+}
+
+function shakeOtp() {
+  const row = $("#otp-row");
+  if (!row) return;
+  row.classList.remove("shake");
+  void row.offsetWidth;
+  row.classList.add("shake");
+}
+
+function bindOtp() {
+  const boxes = $$(".otp-box");
+  if (!boxes.length) return;
+
+  boxes.forEach((box, idx) => {
+    box.addEventListener("input", () => {
+      // Strip non-digits, keep only the last digit
+      const v = box.value.replace(/\D/g, "").slice(-1);
+      box.value = v;
+      box.classList.toggle("filled", !!v);
+
+      // Clear any previous error state once user starts retyping
+      setOtpStatus(null);
+
+      if (v && idx < boxes.length - 1) {
+        boxes[idx + 1].focus();
+        boxes[idx + 1].select?.();
+      }
+
+      // All filled? submit
+      const allFilled = boxes.every((b) => b.value);
+      if (allFilled) {
+        const pin = boxes.map((b) => b.value).join("");
+        // small blur lets the last digit visually "land" before transition
+        box.blur();
+        onOtpComplete(pin);
+      }
+    });
+
+    box.addEventListener("keydown", (e) => {
+      if (e.key === "Backspace") {
+        if (!box.value && idx > 0) {
+          e.preventDefault();
+          const prev = boxes[idx - 1];
+          prev.value = "";
+          prev.classList.remove("filled");
+          prev.focus();
+        }
+      } else if (e.key === "ArrowLeft" && idx > 0) {
+        e.preventDefault();
+        boxes[idx - 1].focus();
+      } else if (e.key === "ArrowRight" && idx < boxes.length - 1) {
+        e.preventDefault();
+        boxes[idx + 1].focus();
+      }
+    });
+
+    box.addEventListener("paste", (e) => {
+      e.preventDefault();
+      const clip = (e.clipboardData || window.clipboardData).getData("text") || "";
+      const digits = clip.replace(/\D/g, "").slice(0, boxes.length - idx);
+      if (!digits) return;
+      digits.split("").forEach((d, i) => {
+        if (idx + i < boxes.length) {
+          boxes[idx + i].value = d;
+          boxes[idx + i].classList.add("filled");
+        }
+      });
+      const last = Math.min(idx + digits.length, boxes.length - 1);
+      boxes[last].focus();
+      if (boxes.every((b) => b.value)) {
+        const pin = boxes.map((b) => b.value).join("");
+        onOtpComplete(pin);
+      }
+    });
+
+    box.addEventListener("focus", () => box.select?.());
+  });
+}
+
+async function onOtpComplete(pin) {
+  if (!/^\d{4}$/.test(pin)) return;
+
+  // Online: validate the room actually exists before advancing
+  if (state.online) {
+    setOtpStatus("checking", "pin_checking");
+    try {
+      const exists = await roomExists(pin);
+      if (!exists) {
+        setOtpStatus("error", "pin_invalid");
+        shakeOtp();
+        setTimeout(() => {
+          resetOtp();
+          $$(".otp-box")[0]?.focus();
+        }, 600);
+        return;
+      }
+    } catch (e) {
+      // Network issue — let them try anyway, name screen will surface errors
+    }
+    setOtpStatus(null);
+  }
+
+  state.pendingJoinPin = pin;
+  // Pre-fill room pill on the name screen
+  setI18n($("#name-screen-title"), "name_title_join_url");
+  $("#room-pin-pill-value").textContent = pin;
+  $("#room-pin-pill").hidden = false;
+  $("#input-name").value = state.myName || "";
+  showScreen("name");
+  setTimeout(() => $("#input-name").focus(), 150);
 }
 
 // ============================================================
@@ -715,12 +874,14 @@ async function boot() {
         // Fire-and-forget: scrub stale rooms in the background.
         cleanupOldRooms();
         if (urlPin && /^\d{4}$/.test(urlPin)) {
+          // QR-scan / link entry: PIN already known, skip OTP screen
           state.pendingAction = "join";
+          state.pendingJoinPin = urlPin;
           setI18n($("#name-screen-title"), "name_title_join_url");
-          $("#pin-field").hidden = false;
-          $("#input-pin").value = urlPin;
+          $("#room-pin-pill-value").textContent = urlPin;
+          $("#room-pin-pill").hidden = false;
           showScreen("name");
-          setTimeout(() => $("#input-name").focus(), 100);
+          setTimeout(() => $("#input-name").focus(), 150);
         }
       }
     } catch (e) {
