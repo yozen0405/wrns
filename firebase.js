@@ -27,10 +27,15 @@ import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js";
 // Activity = the most recent of {meta.createdAt, turn.dealtAt, any player.joinedAt}.
 const ROOM_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
 
+// Grace period before a disconnected host's room is wiped.
+// Survives WiFi blips, page reloads, etc.
+export const HOST_GRACE_MS = 15 * 1000; // 15 seconds
+
 let app = null;
 let db = null;
 let auth = null;
 let authUid = null;
+let hostConnectionUnsub = null;
 // playerId is per-TAB (sessionStorage), so two tabs in the same browser
 // don't clobber each other's player record. Firebase auth uid is shared
 // across tabs via IndexedDB persistence, which is why we can't use it.
@@ -106,8 +111,41 @@ export async function createRoom(pin, hostName, lang = "zh") {
       },
     },
   });
-  // auto-clean if host disconnects (handled in app.js too)
-  onDisconnect(roomRef(pin, `players/${playerId}`)).remove();
+  // Watch host's connection: on disconnect we set a "leaving" timestamp
+  // instead of deleting immediately. Reconnecting clears it. Clients
+  // schedule the actual deleteRoom after HOST_GRACE_MS has passed.
+  watchHostConnection(pin);
+}
+
+// Listens to Firebase's connection state and keeps the host's "leaving"
+// onDisconnect handler armed. Re-arms after every reconnect (onDisconnect
+// handlers fire once and need re-registration).
+function watchHostConnection(pin) {
+  if (hostConnectionUnsub) {
+    hostConnectionUnsub();
+    hostConnectionUnsub = null;
+  }
+  const connectedRef = ref(db, ".info/connected");
+  hostConnectionUnsub = onValue(connectedRef, async (snap) => {
+    if (snap.val() !== true) return; // only act on connect / reconnect
+    try {
+      // Wipe any leftover "leaving" marker from a previous disconnect
+      await update(roomRef(pin, "meta"), { hostLeftAt: null });
+      // (Re-)arm: if we drop again, mark when we left
+      await onDisconnect(roomRef(pin, "meta/hostLeftAt")).set(
+        serverTimestamp()
+      );
+    } catch (e) {
+      // Room might already be deleted, or we lost permission — ignore.
+    }
+  });
+}
+
+export function stopHostConnectionWatch() {
+  if (hostConnectionUnsub) {
+    hostConnectionUnsub();
+    hostConnectionUnsub = null;
+  }
 }
 
 export async function joinRoom(pin, playerName) {
@@ -125,6 +163,17 @@ export async function leaveRoom(pin) {
   if (!pin || !playerId) return;
   try {
     await remove(roomRef(pin, `players/${playerId}`));
+  } catch (e) {
+    // ignore
+  }
+}
+
+// Host explicit leave: nukes the entire room. All other subscribers
+// receive null and get bounced to landing.
+export async function deleteRoom(pin) {
+  if (!pin) return;
+  try {
+    await remove(roomRef(pin));
   } catch (e) {
     // ignore
   }

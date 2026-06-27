@@ -14,11 +14,14 @@ import {
   createRoom,
   joinRoom,
   leaveRoom,
+  deleteRoom,
   subscribeRoom,
   updateMeta,
   updateTurn,
   markUsed,
   cleanupOldRooms,
+  stopHostConnectionWatch,
+  HOST_GRACE_MS,
 } from "./firebase.js";
 
 // ============================================================
@@ -324,15 +327,52 @@ async function pickUniquePin() {
 // ============================================================
 // Room subscription
 // ============================================================
+let hostLeaveTimer = null;
+
+function clearHostLeaveTimer() {
+  if (hostLeaveTimer) {
+    clearTimeout(hostLeaveTimer);
+    hostLeaveTimer = null;
+  }
+}
+
 function attachRoomSubscription(pin) {
   if (state.unsubscribe) state.unsubscribe();
   state.unsubscribe = subscribeRoom(pin, (room) => {
     if (!room) {
+      clearHostLeaveTimer();
       toast("room_closed");
       goHome();
       return;
     }
     state.room = room;
+
+    // Host-disconnect grace handling.
+    // If meta.hostLeftAt is set, schedule a deleteRoom for when grace expires.
+    // If it gets cleared (host reconnected), cancel the pending deletion.
+    const hostLeftAt = room.meta?.hostLeftAt;
+    if (typeof hostLeftAt === "number" && hostLeftAt > 0) {
+      const age = Date.now() - hostLeftAt;
+      const remaining = HOST_GRACE_MS - age;
+      if (remaining <= 0) {
+        clearHostLeaveTimer();
+        deleteRoom(pin).catch(() => {});
+        return;
+      }
+      clearHostLeaveTimer();
+      hostLeaveTimer = setTimeout(() => {
+        hostLeaveTimer = null;
+        // Re-check before nuking: host may have come back at the last second
+        const stillGone = state.room?.meta?.hostLeftAt;
+        if (typeof stillGone === "number" && stillGone > 0 &&
+            Date.now() - stillGone >= HOST_GRACE_MS) {
+          deleteRoom(pin).catch(() => {});
+        }
+      }, remaining + 200);
+    } else {
+      clearHostLeaveTimer();
+    }
+
     renderFromRoom();
   });
 }
@@ -608,8 +648,19 @@ async function offlineNextCard() {
 // Misc
 // ============================================================
 async function goHome(removeMe = false) {
+  clearHostLeaveTimer();
+  if (state.mode === "host") {
+    // Stop watching connection so reconnect won't re-arm onDisconnect on a
+    // room we're abandoning.
+    stopHostConnectionWatch();
+  }
   if (removeMe && state.online && state.pin) {
-    await leaveRoom(state.pin);
+    if (state.mode === "host") {
+      // Host leaving disbands the entire room.
+      await deleteRoom(state.pin);
+    } else {
+      await leaveRoom(state.pin);
+    }
   }
   if (state.unsubscribe) {
     state.unsubscribe();
