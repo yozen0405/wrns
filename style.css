@@ -205,7 +205,11 @@ body {
   font-size: 12px;
 }
 
-/* ---------- OTP-style PIN entry ---------- */
+/* ---------- OTP-style PIN entry ----------
+   Architecture: 4 visual <span> cells + 1 transparent <input> stretched over
+   them. The whole row is wrapped in a <label> so any tap focuses the input.
+   Users can ONLY type / backspace — clicking individual cells does nothing
+   because the cells aren't focusable. */
 .otp-stage {
   display: flex;
   flex-direction: column;
@@ -213,54 +217,65 @@ body {
   gap: 26px;
   margin-top: 6vh;
 }
-.otp-input-row {
+.otp-cells {
+  position: relative;
   display: flex;
   gap: 12px;
+  cursor: text;
 }
-.otp-box {
+.otp-cell {
   width: 62px;
   height: 78px;
+  border-radius: 16px;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  background: var(--surface);
+  color: var(--accent);
   font-size: 38px;
   font-family: ui-monospace, "SF Mono", "Menlo", "Consolas", monospace;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  text-align: center;
-  color: var(--accent);
-  background: var(--surface);
-  border: 1.5px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  outline: none;
-  caret-color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition:
     border-color 0.2s ease,
     background 0.2s ease,
-    transform 0.18s cubic-bezier(0.2, 0.7, 0.2, 1),
-    box-shadow 0.25s ease;
-  -webkit-appearance: none;
-  appearance: none;
-  padding: 0;
+    box-shadow 0.28s ease;
+  user-select: none;
+  -webkit-user-select: none;
 }
-.otp-box::-webkit-outer-spin-button,
-.otp-box::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.otp-box:focus {
-  border-color: var(--accent);
-  background: var(--surface-2);
-  transform: translateY(-3px);
-  box-shadow:
-    0 10px 28px rgba(230, 161, 87, 0.22),
-    0 0 0 4px rgba(230, 161, 87, 0.12);
-}
-.otp-box.filled {
+.otp-cell.filled {
   border-color: rgba(230, 161, 87, 0.55);
   background: linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 100%);
 }
-.otp-box.filled:not(:focus) {
-  transform: translateY(0);
+.otp-cell.active {
+  border-color: var(--accent);
+  background: var(--surface-2);
+  box-shadow:
+    0 0 0 4px rgba(230, 161, 87, 0.18),
+    0 0 18px rgba(230, 161, 87, 0.28);
 }
-.otp-input-row.shake {
+/* The real input — transparent overlay catching all keystrokes. */
+.otp-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  caret-color: transparent;
+  font-size: 16px; /* >= 16px keeps iOS from auto-zooming */
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 0;
+  margin: 0;
+  /* Tap target spans the whole cell row */
+  cursor: text;
+}
+.otp-cells.shake {
   animation: otp-shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 @keyframes otp-shake {
@@ -282,16 +297,57 @@ body {
   color: var(--danger);
 }
 
-/* Mobile: shrink boxes so all 4 fit comfortably */
+/* Mobile: shrink cells so all 4 fit comfortably */
 @media (max-width: 380px) {
-  .otp-box {
+  .otp-cell {
     width: 56px;
     height: 70px;
     font-size: 32px;
   }
-  .otp-input-row {
+  .otp-cells {
     gap: 8px;
   }
+}
+
+/* ---------- Top-left back arrow ---------- */
+.nav-back-global {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 200;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: rgba(42, 31, 51, 0.96);
+  color: var(--ink);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease, transform 0.1s ease;
+}
+.nav-back-global:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #2a1808;
+}
+.nav-back-global:active {
+  transform: scale(0.94);
+}
+.nav-back-global svg {
+  display: block;
+}
+.nav-back-global[hidden] { display: none !important; }
+
+/* Full-width primary button (used on name screen now that there's no "back") */
+.big-btn.full {
+  width: 100%;
 }
 
 /* Room-PIN pill (shown on name screen when joining) */

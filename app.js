@@ -28,17 +28,17 @@ import {
 // I18N — UI chrome strings only (card content is always bilingual)
 // ============================================================
 const I18N = {
-  brand_title: { zh: "不再是陌生人", en: "We Are Not Strangers" },
+  brand_title: { zh: "當我們不再是陌生人", en: "We Are Not Strangers" },
   tagline: {
-    zh: "一個讓你慢慢靠近的房間",
-    en: "A room to slowly come closer",
+    zh: "歡迎墨爾本團語伴",
+    en: "Welcome to the Melbourne group edition",
   },
   name_title_create: { zh: "你叫什麼名字?", en: "What's your name?" },
   name_title_join_url: { zh: "輸入名字加入", en: "Enter your name to join" },
   name_label: { zh: "暱稱 / Your name", en: "Your name / 暱稱" },
   name_placeholder: { zh: "輸入 1–14 字", en: "1–14 characters" },
   pin_title: { zh: "輸入房間 PIN", en: "Enter the room PIN" },
-  pin_tagline: { zh: "朋友給你的 4 位數字", en: "The 4 digits your friend shared" },
+  pin_tagline: { zh: "四位數字", en: "4 digits from the host" },
   pin_checking: { zh: "確認中…", en: "Checking…" },
   pin_invalid: { zh: "找不到這個房間", en: "Room not found" },
   room_pin_label: { zh: "房間", en: "Room" },
@@ -152,6 +152,15 @@ function showScreen(name) {
   $$(".screen").forEach((el) => {
     el.classList.toggle("hidden", el.dataset.screen !== name);
   });
+  updateNavBack();
+}
+
+// Show the top-left back arrow only on screens where "back" makes sense.
+function updateNavBack() {
+  const back = document.getElementById("nav-back");
+  if (!back) return;
+  const current = document.querySelector(".screen:not(.hidden)")?.dataset.screen;
+  back.hidden = !(current === "pin" || current === "name");
 }
 
 function toast(msgOrKey, ms = 2200) {
@@ -206,24 +215,7 @@ function bindLanding() {
       state.pendingJoinPin = null;
       resetOtp();
       showScreen("pin");
-      setTimeout(() => $$(".otp-box")[0]?.focus(), 150);
-    })
-  );
-
-  $$('[data-action="back-landing"]').forEach((b) =>
-    b.addEventListener("click", () => showScreen("landing"))
-  );
-
-  // "Back" on name screen: join flow returns to pin, create flow returns to landing
-  $$('[data-action="name-back"]').forEach((b) =>
-    b.addEventListener("click", () => {
-      if (state.pendingAction === "join") {
-        resetOtp();
-        showScreen("pin");
-        setTimeout(() => $$(".otp-box")[0]?.focus(), 150);
-      } else {
-        showScreen("landing");
-      }
+      setTimeout(() => $("#otp-input")?.focus(), 150);
     })
   );
 
@@ -233,6 +225,22 @@ function bindLanding() {
 
   $("#input-name").addEventListener("keydown", (e) => {
     if (e.key === "Enter") onSubmitName();
+  });
+
+  // Top-left back arrow — context-aware
+  document.getElementById("nav-back").addEventListener("click", () => {
+    const current = document.querySelector(".screen:not(.hidden)")?.dataset.screen;
+    if (current === "pin") {
+      showScreen("landing");
+    } else if (current === "name") {
+      if (state.pendingAction === "join") {
+        resetOtp();
+        showScreen("pin");
+        setTimeout(() => $("#otp-input")?.focus(), 150);
+      } else {
+        showScreen("landing");
+      }
+    }
   });
 
   bindOtp();
@@ -271,7 +279,7 @@ async function onSubmitName() {
       // PIN got lost somehow — bounce back to PIN screen
       resetOtp();
       showScreen("pin");
-      setTimeout(() => $$(".otp-box")[0]?.focus(), 150);
+      setTimeout(() => $("#otp-input")?.focus(), 150);
       return;
     }
     await startAsGuest(pin, name);
@@ -279,39 +287,67 @@ async function onSubmitName() {
 }
 
 // ============================================================
-// OTP input — 4-box PIN entry
+// OTP input — 4 display cells + 1 transparent input
+// Users can only type / backspace. Clicking a specific cell does nothing,
+// because the cells aren't focusable — taps land on the single input.
 // ============================================================
-function resetOtp() {
-  $$(".otp-box").forEach((box) => {
-    box.value = "";
-    box.classList.remove("filled");
+const OTP_LENGTH = 4;
+
+function getOtpInput() {
+  return document.getElementById("otp-input");
+}
+function getOtpCells() {
+  return $$(".otp-cell");
+}
+
+function renderOtp() {
+  const input = getOtpInput();
+  const cells = getOtpCells();
+  if (!input || !cells.length) return;
+  const v = input.value.replace(/\D/g, "").slice(0, OTP_LENGTH);
+  if (v !== input.value) input.value = v;
+
+  const focused = document.activeElement === input;
+  cells.forEach((cell, i) => {
+    cell.textContent = v[i] || "";
+    cell.classList.toggle("filled", !!v[i]);
+    // Active = the next empty cell (or the last one once full) when focused
+    const isActive =
+      focused && (i === v.length || (v.length === OTP_LENGTH && i === OTP_LENGTH - 1));
+    cell.classList.toggle("active", !!isActive);
   });
+}
+
+function resetOtp() {
+  const input = getOtpInput();
+  if (input) input.value = "";
+  getOtpCells().forEach((c) => c.classList.remove("filled", "active"));
   const status = $("#otp-status");
   if (status) {
     status.hidden = true;
     status.textContent = "";
     status.classList.remove("checking", "error");
   }
-  const row = $("#otp-row");
+  const row = $("#otp-cells");
   if (row) row.classList.remove("shake");
 }
 
-function setOtpStatus(state, key) {
+function setOtpStatus(kind, key) {
   const status = $("#otp-status");
   if (!status) return;
   status.classList.remove("checking", "error");
-  if (!state) {
+  if (!kind) {
     status.hidden = true;
     status.textContent = "";
     return;
   }
   status.hidden = false;
-  status.classList.add(state);
+  status.classList.add(kind);
   status.textContent = t(key);
 }
 
 function shakeOtp() {
-  const row = $("#otp-row");
+  const row = $("#otp-cells");
   if (!row) return;
   row.classList.remove("shake");
   void row.offsetWidth;
@@ -319,72 +355,66 @@ function shakeOtp() {
 }
 
 function bindOtp() {
-  const boxes = $$(".otp-box");
-  if (!boxes.length) return;
+  const input = getOtpInput();
+  const row = $("#otp-cells");
+  if (!input || !row) return;
 
-  boxes.forEach((box, idx) => {
-    box.addEventListener("input", () => {
-      // Strip non-digits, keep only the last digit
-      const v = box.value.replace(/\D/g, "").slice(-1);
-      box.value = v;
-      box.classList.toggle("filled", !!v);
+  // Any tap on the cell row focuses the input.
+  row.addEventListener("mousedown", (e) => {
+    // Avoid double-firing on the input itself
+    if (e.target === input) return;
+    e.preventDefault();
+    input.focus();
+  });
+  row.addEventListener("touchstart", (e) => {
+    if (e.target === input) return;
+    // Don't preventDefault — iOS needs the tap to open the keyboard
+    setTimeout(() => input.focus(), 0);
+  }, { passive: true });
 
-      // Clear any previous error state once user starts retyping
-      setOtpStatus(null);
+  input.addEventListener("input", () => {
+    // Strip non-digits, cap at OTP_LENGTH
+    const cleaned = input.value.replace(/\D/g, "").slice(0, OTP_LENGTH);
+    if (cleaned !== input.value) input.value = cleaned;
+    // Keep cursor pinned at the end
+    try {
+      input.setSelectionRange(input.value.length, input.value.length);
+    } catch {}
+    // Clear any previous error state once user starts retyping
+    setOtpStatus(null);
+    renderOtp();
+    if (input.value.length === OTP_LENGTH) {
+      input.blur();
+      onOtpComplete(input.value);
+    }
+  });
 
-      if (v && idx < boxes.length - 1) {
-        boxes[idx + 1].focus();
-        boxes[idx + 1].select?.();
-      }
-
-      // All filled? submit
-      const allFilled = boxes.every((b) => b.value);
-      if (allFilled) {
-        const pin = boxes.map((b) => b.value).join("");
-        // small blur lets the last digit visually "land" before transition
-        box.blur();
-        onOtpComplete(pin);
-      }
-    });
-
-    box.addEventListener("keydown", (e) => {
-      if (e.key === "Backspace") {
-        if (!box.value && idx > 0) {
-          e.preventDefault();
-          const prev = boxes[idx - 1];
-          prev.value = "";
-          prev.classList.remove("filled");
-          prev.focus();
-        }
-      } else if (e.key === "ArrowLeft" && idx > 0) {
-        e.preventDefault();
-        boxes[idx - 1].focus();
-      } else if (e.key === "ArrowRight" && idx < boxes.length - 1) {
-        e.preventDefault();
-        boxes[idx + 1].focus();
-      }
-    });
-
-    box.addEventListener("paste", (e) => {
+  // Prevent cursor movement so backspace always deletes from the right
+  input.addEventListener("keydown", (e) => {
+    if (
+      e.key === "ArrowLeft" ||
+      e.key === "ArrowRight" ||
+      e.key === "ArrowUp" ||
+      e.key === "ArrowDown" ||
+      e.key === "Home" ||
+      e.key === "End"
+    ) {
       e.preventDefault();
-      const clip = (e.clipboardData || window.clipboardData).getData("text") || "";
-      const digits = clip.replace(/\D/g, "").slice(0, boxes.length - idx);
-      if (!digits) return;
-      digits.split("").forEach((d, i) => {
-        if (idx + i < boxes.length) {
-          boxes[idx + i].value = d;
-          boxes[idx + i].classList.add("filled");
-        }
-      });
-      const last = Math.min(idx + digits.length, boxes.length - 1);
-      boxes[last].focus();
-      if (boxes.every((b) => b.value)) {
-        const pin = boxes.map((b) => b.value).join("");
-        onOtpComplete(pin);
-      }
-    });
+    }
+  });
 
-    box.addEventListener("focus", () => box.select?.());
+  // Cursor pin on focus / click
+  input.addEventListener("focus", () => {
+    try {
+      input.setSelectionRange(input.value.length, input.value.length);
+    } catch {}
+    renderOtp();
+  });
+  input.addEventListener("blur", renderOtp);
+  input.addEventListener("click", () => {
+    try {
+      input.setSelectionRange(input.value.length, input.value.length);
+    } catch {}
   });
 }
 
@@ -401,7 +431,7 @@ async function onOtpComplete(pin) {
         shakeOtp();
         setTimeout(() => {
           resetOtp();
-          $$(".otp-box")[0]?.focus();
+          $("#otp-input")?.focus();
         }, 600);
         return;
       }
