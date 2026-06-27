@@ -18,6 +18,7 @@ import {
   updateMeta,
   updateTurn,
   markUsed,
+  cleanupOldRooms,
 } from "./firebase.js";
 
 // ============================================================
@@ -660,6 +661,8 @@ async function boot() {
       if (r) {
         state.myUid = r.uid;
         state.online = true;
+        // Fire-and-forget: scrub stale rooms in the background.
+        cleanupOldRooms();
         if (urlPin && /^\d{4}$/.test(urlPin)) {
           state.pendingAction = "join";
           setI18n($("#name-screen-title"), "name_title_join_url");

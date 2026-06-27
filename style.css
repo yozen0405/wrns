@@ -362,6 +362,11 @@ body {
   color: var(--ink-dim);
   letter-spacing: 1px;
 }
+/* When both badges are on the same row, only the first one pushes right;
+   the second one sits tightly next to it instead of competing for space. */
+.host-badge + .me-badge {
+  margin-left: 8px;
+}
 
 .lobby-controls {
   display: flex;

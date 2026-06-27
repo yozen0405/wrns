@@ -23,6 +23,10 @@ import {
 
 import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js";
 
+// Rooms older than this without activity get deleted on next app boot.
+// Activity = the most recent of {meta.createdAt, turn.dealtAt, any player.joinedAt}.
+const ROOM_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
+
 let app = null;
 let db = null;
 let auth = null;
@@ -141,6 +145,48 @@ export async function updateTurn(pin, turn) {
 
 export async function markUsed(pin, questionId) {
   await update(roomRef(pin, "usedQuestions"), { [questionId]: true });
+}
+
+// ----- Stale-room cleanup -----
+// Scans /rooms, deletes any whose last activity is older than ROOM_TTL_MS.
+// Fire-and-forget from app boot; failures are silently swallowed.
+export async function cleanupOldRooms() {
+  if (!db) return;
+  try {
+    const snap = await get(ref(db, "rooms"));
+    if (!snap.exists()) return;
+
+    const now = Date.now();
+    const deletions = [];
+
+    snap.forEach((roomSnap) => {
+      const data = roomSnap.val() || {};
+      const meta = data.meta || {};
+      const turn = data.turn || {};
+      const players = data.players || {};
+
+      const playerTimes = Object.values(players)
+        .map((p) => Number(p?.joinedAt) || 0);
+
+      const lastActivity = Math.max(
+        Number(meta.createdAt) || 0,
+        Number(turn.dealtAt) || 0,
+        0,
+        ...playerTimes
+      );
+
+      if (lastActivity > 0 && now - lastActivity > ROOM_TTL_MS) {
+        deletions.push(remove(roomSnap.ref));
+      }
+    });
+
+    if (deletions.length) {
+      await Promise.all(deletions);
+      console.log(`[wrns] cleaned up ${deletions.length} stale room(s)`);
+    }
+  } catch (e) {
+    console.warn("[wrns] room cleanup skipped:", e?.message || e);
+  }
 }
 
 export { runTransaction };
