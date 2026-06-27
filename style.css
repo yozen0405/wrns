@@ -70,6 +70,9 @@ body {
 .screen.hidden {
   display: none;
 }
+.screen[data-screen="game"] {
+  animation: none;
+}
 
 @keyframes fade-in {
   from {

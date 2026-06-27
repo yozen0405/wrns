@@ -833,10 +833,10 @@ async function playCardIntro(question) {
   overlayZh.textContent = themes.zh;
   overlayEn.textContent = themes.en;
   overlay.classList.remove("fade-out");
-  overlay.classList.add("show");
-  void overlay.offsetWidth;
   backdrop.classList.remove("fade-out");
   backdrop.classList.add("show");
+  await new Promise((resolve) => requestAnimationFrame(resolve));
+  overlay.classList.add("show");
 
   await wait(INTRO_HOLD_MS);
 

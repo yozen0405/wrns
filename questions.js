@@ -47,7 +47,8 @@ export const QUESTIONS = {
       "有沒有什麼關於你的小秘密,或是一個特殊的小技能,是朋友剛認識你時絕對猜不到的?(例如:其實超會夾娃娃、會知道很多冷知識)",
       "你覺得自己最容易被誤會的地方是什麼?通常要熟到什麼程度,別人才會真的理解你?",
       "有沒有哪一個經驗讓你發現自己其實比想像中更勇敢、或更脆弱?",
-      "你喜歡自己現在讀的科系嗎？有沒有哪一點和你原本想像差很多？"
+      "你喜歡自己現在讀的科系嗎？有沒有哪一點和你原本想像差很多？",
+      "你認為你自己是一個完美主義的人嗎？還是隨遇而安？",
     ],
     interests: [
       "你比較喜歡動態活動還是靜態活動?平常最常做的休閒活動是什麼?",
@@ -202,6 +203,7 @@ export const QUESTIONS = {
       "What part of you do people most often misunderstand? How close does someone have to be before they really understand you?",
       "Has any experience made you realize you're braver, or more vulnerable, than you thought?",
       "Do you like the major you're studying now? Is there anything about it that's very different from what you expected?",
+      "Do you consider yourself a perfectionist, or more go-with-the-flow?",
     ],
     interests: [
       "Do you prefer active or quiet activities? What leisure activity do you do most often?",
