@@ -26,28 +26,52 @@ import { FIREBASE_CONFIG, isFirebaseConfigured } from "./firebase-config.js";
 let app = null;
 let db = null;
 let auth = null;
-let uid = null;
+let authUid = null;
+// playerId is per-TAB (sessionStorage), so two tabs in the same browser
+// don't clobber each other's player record. Firebase auth uid is shared
+// across tabs via IndexedDB persistence, which is why we can't use it.
+let playerId = null;
+
+function getOrCreatePlayerId() {
+  try {
+    let id = sessionStorage.getItem("wrns_pid");
+    if (!id) {
+      id =
+        "p_" +
+        Math.random().toString(36).slice(2, 10) +
+        Date.now().toString(36);
+      sessionStorage.setItem("wrns_pid", id);
+    }
+    return id;
+  } catch {
+    // fallback if sessionStorage blocked
+    return "p_" + Math.random().toString(36).slice(2, 12);
+  }
+}
 
 export async function initFirebase() {
   if (!isFirebaseConfigured()) return null;
-  if (app) return { db, uid };
+  if (app) return { db, uid: playerId };
 
   app = initializeApp(FIREBASE_CONFIG);
   auth = getAuth(app);
   db = getDatabase(app);
 
   await signInAnonymously(auth);
-  uid = await new Promise((resolve) => {
+  authUid = await new Promise((resolve) => {
     onAuthStateChanged(auth, (user) => {
       if (user) resolve(user.uid);
     });
   });
 
-  return { db, uid };
+  playerId = getOrCreatePlayerId();
+  return { db, uid: playerId };
 }
 
+// Returns the per-tab player ID (NOT the Firebase auth uid).
+// Kept under the name getUid() so callers don't have to change.
 export function getUid() {
-  return uid;
+  return playerId;
 }
 
 export function roomRef(pin, path = "") {
@@ -63,7 +87,7 @@ export async function roomExists(pin) {
 export async function createRoom(pin, hostName, lang = "zh") {
   await set(roomRef(pin), {
     meta: {
-      hostId: uid,
+      hostId: playerId,
       lang,
       state: "lobby",
       level: 1,
@@ -71,32 +95,32 @@ export async function createRoom(pin, hostName, lang = "zh") {
       createdAt: serverTimestamp(),
     },
     players: {
-      [uid]: {
+      [playerId]: {
         name: hostName,
         joinedAt: serverTimestamp(),
         isHost: true,
       },
     },
   });
-  // auto-clean if host disconnects right away in lobby (handled in app.js too)
-  onDisconnect(roomRef(pin, `players/${uid}`)).remove();
+  // auto-clean if host disconnects (handled in app.js too)
+  onDisconnect(roomRef(pin, `players/${playerId}`)).remove();
 }
 
 export async function joinRoom(pin, playerName) {
   const exists = await roomExists(pin);
   if (!exists) throw new Error("ROOM_NOT_FOUND");
-  await update(roomRef(pin, `players/${uid}`), {
+  await update(roomRef(pin, `players/${playerId}`), {
     name: playerName,
     joinedAt: serverTimestamp(),
     isHost: false,
   });
-  onDisconnect(roomRef(pin, `players/${uid}`)).remove();
+  onDisconnect(roomRef(pin, `players/${playerId}`)).remove();
 }
 
 export async function leaveRoom(pin) {
-  if (!pin || !uid) return;
+  if (!pin || !playerId) return;
   try {
-    await remove(roomRef(pin, `players/${uid}`));
+    await remove(roomRef(pin, `players/${playerId}`));
   } catch (e) {
     // ignore
   }
