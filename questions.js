@@ -1,9 +1,10 @@
 // Question deck for WRNS-lite
-// 13 themes × ~5–27 questions each = ~150 prompts.
+// 14 themes × ~5–27 questions each = ~150 prompts.
 // Every card shows the theme + question in both zh & en simultaneously.
 
 export const THEMES = [
   { id: "self",      zh: "自我認識", en: "About You" },
+  { id: "deep_self", zh: "深處的你", en: "Deeper You" },
   { id: "interests", zh: "興趣",     en: "Hobbies" },
   { id: "food",      zh: "食物",     en: "Food" },
   { id: "daily",     zh: "日常",     en: "Daily Life" },
@@ -22,26 +23,31 @@ export const QUESTIONS = {
   zh: {
     self: [
       "你的名字是什麼？你的中/英名字有什麼特別的故事嗎?",
-      "介紹一下你的家鄉,有沒有什麼是你很喜歡 / 很不喜歡的?",
       "你會怎麼用三個詞形容自己?",
+      "你目前就讀什麼科系?當初為什麼選擇這個科系?",
+      "你是哪裡人？你會怎麼跟朋友介紹你的家鄉呢？",
       "你的星座是什麼?有什麼特質?你相信星座嗎?",
-      "熟了以後,別人會發現你跟第一印象有什麼不同?會有很大的反差嗎?",
-      "你目前就讀什麼科系或從事什麼工作?當初為什麼選擇這個科系?你喜歡嗎?",
       "你參加語伴計畫最想學到什麼，或帶走什麼樣的收穫？除了語言進步之外，你有沒有特別期待了解的文化、認識的人，或想突破的事情？",
       "你的 MBTI 是什麼?你覺得 MBTI 測得準嗎?",
       "在學校有參加過什麼好玩的社團嗎?印象最深刻的社團經驗是什麼?",
-      "回想大學生活,有沒有哪一次參加活動或跟朋友出去玩,發生過非常瘋狂或讓你印象超深刻的事?",
-      "你最近這一年有沒有做過什麼很衝動但完全不後悔的決定?例如說走就走的夜衝、在期中考前一天還夜唱",
-      "你有沒有遇過那種當下覺得超尷尬的社死經驗?(例如路上認錯人、傳錯訊息到大群組)",
-      "有沒有什麼興趣或事物,是你一開始完全沒興趣,結果後來被朋友推坑之後反而超級入迷的?",
       "你是派對咖,還是喜歡宅在家?",
       "你今天的心情可以用一個顏色形容,是什麼顏色?",
-      "有沒有什麼關於你的小秘密,或是一個特殊的小技能,是朋友剛認識你時絕對猜不到的?(例如:其實超會夾娃娃、會知道很多冷知識)",
       "你最喜歡一年之中的哪個季節?為什麼？",
       "你通常是喜歡在晴天的熱情還是雨天的寧靜?",
       "你在大學裡修過最有趣或是最硬的課程是什麼? 你最享受或是覺得最痛苦的是哪一部分?",
       "除了中英文以外,你還會哪些語言?當初為什麼會想學這個語言呢？",
       "你學一個語言最困難，或是最有趣的地方是什麼？",
+    ],
+    deep_self: [
+      "熟了以後,別人會發現你跟第一印象有什麼不同?會有很大的反差嗎?",
+      "回想大學生活,有沒有哪一次參加活動或跟朋友出去玩,發生過非常瘋狂或讓你印象超深刻的事?",
+      "你最近這一年有沒有做過什麼很衝動但完全不後悔的決定?例如說走就走的夜衝、在期中考前一天還夜唱",
+      "你有沒有遇過那種當下覺得超尷尬的社死經驗?(例如路上認錯人、傳錯訊息到大群組)",
+      "有沒有什麼興趣或事物,是你一開始完全沒興趣,結果後來被朋友推坑之後反而超級入迷的?",
+      "有沒有什麼關於你的小秘密,或是一個特殊的小技能,是朋友剛認識你時絕對猜不到的?(例如:其實超會夾娃娃、會知道很多冷知識)",
+      "你覺得自己最容易被誤會的地方是什麼?通常要熟到什麼程度,別人才會真的理解你?",
+      "有沒有哪一個經驗讓你發現自己其實比想像中更勇敢、或更脆弱?",
+      "你喜歡自己現在讀的科系嗎？有沒有哪一點和你原本想像差很多？"
     ],
     interests: [
       "你比較喜歡動態活動還是靜態活動?平常最常做的休閒活動是什麼?",
@@ -65,10 +71,13 @@ export const QUESTIONS = {
       "咖哩飯拌還是不拌?",
       "披薩上可以放鳳梨嗎?",
       "火鍋可以加芋頭嗎?",
-      "珍珠奶茶通常喝幾分糖?幾分冰?",
       "你喜歡吃辣嗎? 有沒有吃過什麼食物以為不辣,結果辣到靠北的?",
       "有什麼食物是你小時候討厭,長大後卻喜歡的?",
       "有什麼食物你永遠不可能接受?",
+      "在台灣，有沒有哪些你私心推薦的隱藏景點(台灣人答）?",
+      "在台南你最推薦哪一道必吃的在地美食(台灣人答）?",
+      "你有喝手搖飲的習慣嗎？你認為手搖飲應該喝哪一間？",
+      "有沒有哪間台南的咖啡廳是你覺得很頂的? 會想推薦語伴一起去？",
       "如果今天有外國朋友去你的家鄉玩,你會首推哪一道必吃的在地美食?反過來,有哪國的特色料理是你目前最想嘗試看看的?",
       "旅行時,你願意嘗試當地看起來很有趣但是賣相不好的食物嗎?",
       "你平常會自己做菜嗎？如果會，你最常做或最拿手的是哪一道；如果不會，最想先學哪一道？",
@@ -168,26 +177,31 @@ export const QUESTIONS = {
   en: {
     self: [
       "What's your name? Is there a story behind your Chinese / English name?",
-      "Tell us about your hometown — anything you really love or really dislike about it?",
       "How would you describe yourself in three words?",
+      "What major are you studying? Why did you choose it?",
+      "Where are you from? How would you introduce your hometown to a friend?",
       "What's your zodiac sign? What traits come with it? Do you believe in astrology?",
-      "Once people get to know you better, how are you different from their first impression? Is there a big contrast?",
-      "What's your major or job? Why did you pick it — and do you enjoy it?",
       "What do you most want to learn or take away from the language partner program? Besides improving your language skills, are there any cultures, people, or personal challenges you're especially excited about?",
       "What's your MBTI? Do you think MBTI is actually accurate?",
       "Have you joined any fun clubs at school? What's your most memorable club experience?",
-      "Thinking back on university life, was there any event or outing with friends where something really wild or unforgettable happened?",
-      "In the past year, have you made any impulsive decision that you don't regret at all? For example, a spontaneous late-night trip, or going karaoke the night before midterms.",
-      "Have you ever had a socially embarrassing moment that felt terrible at the time, like mistaking someone for another person or sending the wrong message to a big group chat?",
-      "Is there any hobby or thing you had zero interest in at first, but later got pulled into by friends and became really obsessed with?",
       "Are you a party goer or a homebody?",
       "What color would your mood today be?",
-      "Do you have any little secret about yourself, or a special skill that friends would never guess when they first meet you? For example, being amazing at claw machines or knowing lots of random facts.",
       "What's your favorite season of the year? Why?",
       "Do you usually enjoy the energy of sunny days or the calm of rainy days?",
       "What's the most interesting or most intense course you've taken in university? Which part did you enjoy the most, or suffer through the most?",
       "Besides Chinese and English, what other languages do you speak? Why did you want to learn them?",
       "What's the hardest or most interesting part of learning a language for you?",
+    ],
+    deep_self: [
+      "Once people get to know you better, how are you different from their first impression? Is there a big contrast?",
+      "Thinking back on university life, was there any event or outing with friends where something really wild or unforgettable happened?",
+      "In the past year, have you made any impulsive decision that you don't regret at all? For example, a spontaneous late-night trip, or going karaoke the night before midterms.",
+      "Have you ever had a socially embarrassing moment that felt terrible at the time, like mistaking someone for another person or sending the wrong message to a big group chat?",
+      "Is there any hobby or thing you had zero interest in at first, but later got pulled into by friends and became really obsessed with?",
+      "Do you have any little secret about yourself, or a special skill that friends would never guess when they first meet you? For example, being amazing at claw machines or knowing lots of random facts.",
+      "What part of you do people most often misunderstand? How close does someone have to be before they really understand you?",
+      "Has any experience made you realize you're braver, or more vulnerable, than you thought?",
+      "Do you like the major you're studying now? Is there anything about it that's very different from what you expected?",
     ],
     interests: [
       "Do you prefer active or quiet activities? What leisure activity do you do most often?",
@@ -211,10 +225,13 @@ export const QUESTIONS = {
       "Mix the curry rice, or eat it separately?",
       "Pineapple on pizza — acceptable?",
       "Taro in hot pot — yes or no?",
-      "How sweet do you order your bubble tea? Ice level?",
       "Do you like spicy food? Have you ever eaten something that you thought was mild, but turned out to be extremely spicy?",
       "Any food you hated as a kid but love now?",
       "Is there a food you'll never accept?",
+      "In Taiwan, are there any hidden spots you'd personally recommend? (For Taiwanese players)",
+      "In Tainan, which local must-eat dish would you recommend most? (For Taiwanese players)",
+      "Do you usually drink hand-shaken drinks? Which shop do you think people should try?",
+      "Is there a Tainan cafe you think is really great, and would recommend going to with your language partner?",
       "If a foreign friend visited your hometown, what local dish would you recommend first? And on the other hand, which country's special cuisine do you most want to try?",
       "While travelling, would you try something interesting but ugly-looking?",
       "Do you usually cook for yourself? If yes, what's the dish you make most often or best? If not, what's the first dish you'd want to learn?",
@@ -339,15 +356,16 @@ export function themeLabels(themeId) {
 }
 
 // ----- Game pacing -----
-// Phase 1: warmup — 5–7 "self" questions in a row (randomized per game)
+// Phase 1: warmup — 5 "self" questions in a row
 // Phase 2: interest-heavy — next 5 picks include ≥3 "interests" (shuffled)
 // Phase 3: free random across all themes
-const SELF_WARMUP_MIN = 5;
-const SELF_WARMUP_MAX = 7;
+const SELF_WARMUP_COUNT = 5;
+const REQUIRED_SELF_WARMUP_IDS = ["self-0", "self-1", "self-2"];
 const PHASE2_LENGTH = 5;
 const PHASE2_INTEREST_MIN = 3;
 
 let selfWarmupTarget = null;
+let selfWarmupPlan = null; // question ids for the first SELF_WARMUP_COUNT picks
 let phase2Plan = null; // length PHASE2_LENGTH, each slot 'i' or '?'
 
 function shuffleArr(arr) {
@@ -358,28 +376,47 @@ function shuffleArr(arr) {
   return arr;
 }
 
+function buildSelfWarmupPlan(pool) {
+  const selfIds = pool
+    .filter((q) => q.themeId === "self")
+    .map((q) => q.id);
+  const required = REQUIRED_SELF_WARMUP_IDS.filter((id) => selfIds.includes(id));
+  const extraCount = Math.max(0, SELF_WARMUP_COUNT - required.length);
+  const extras = shuffleArr(selfIds.filter((id) => !required.includes(id))).slice(0, extraCount);
+  return shuffleArr([...required, ...extras]).slice(0, SELF_WARMUP_COUNT);
+}
+
 export function pickQuestion(usedIds = []) {
   const pool = flattenPool();
 
   // Reset per-game state at the start of a fresh game.
   if (usedIds.length === 0) {
-    selfWarmupTarget =
-      SELF_WARMUP_MIN +
-      Math.floor(Math.random() * (SELF_WARMUP_MAX - SELF_WARMUP_MIN + 1));
+    selfWarmupTarget = SELF_WARMUP_COUNT;
+    selfWarmupPlan = buildSelfWarmupPlan(pool);
     phase2Plan = null;
   }
   // Defensive: if state was lost (page reload mid-game), re-seed warmup.
   if (selfWarmupTarget === null) {
-    selfWarmupTarget =
-      SELF_WARMUP_MIN +
-      Math.floor(Math.random() * (SELF_WARMUP_MAX - SELF_WARMUP_MIN + 1));
+    selfWarmupTarget = SELF_WARMUP_COUNT;
+  }
+  if (selfWarmupPlan === null) {
+    selfWarmupPlan = buildSelfWarmupPlan(pool);
   }
 
   let available = pool.filter((q) => !usedIds.includes(q.id));
 
   // Phase 1: warmup — restrict to "self"
   if (usedIds.length < selfWarmupTarget) {
-    const selfOnly = available.filter((q) => q.themeId === "self");
+    const plannedId = selfWarmupPlan[usedIds.length];
+    const planned = available.find((q) => q.id === plannedId);
+    if (planned) return planned;
+
+    const plannedRemaining = new Set(
+      selfWarmupPlan.slice(usedIds.length).filter((id) => !usedIds.includes(id))
+    );
+    const selfOnly = available.filter(
+      (q) => q.themeId === "self" && !plannedRemaining.has(q.id)
+    );
     if (selfOnly.length > 0) available = selfOnly;
   }
   // Phase 2: interest-heavy — 3 forced 'interests' slots + 2 free (any non-self),

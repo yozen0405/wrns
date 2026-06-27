@@ -150,6 +150,18 @@
 
       <!-- ========== Toast ========== -->
       <div id="toast" class="toast hidden"></div>
+
+      <!-- ========== Confirm modal (leave room, etc) ========== -->
+      <div id="modal-backdrop" class="modal-backdrop" hidden>
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+          <h3 class="modal-title" id="modal-title">確認?</h3>
+          <p class="modal-body" id="modal-body"></p>
+          <div class="modal-actions">
+            <button class="ghost-btn" id="modal-cancel" data-i18n="confirm_leave_cancel">取消</button>
+            <button class="primary danger" id="modal-confirm" data-i18n="confirm_leave_yes">離開</button>
+          </div>
+        </div>
+      </div>
     </main>
 
     <script type="module" src="./app.js"></script>

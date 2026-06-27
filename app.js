@@ -30,8 +30,8 @@ import {
 const I18N = {
   brand_title: { zh: "當我們不再是陌生人", en: "We Are Not Strangers" },
   tagline: {
-    zh: "歡迎墨爾本團語伴",
-    en: "Welcome to the Melbourne group edition",
+    zh: "一個快速拉近距離的小遊戲",
+    en: "A quick game for getting closer",
   },
   name_title_create: { zh: "你叫什麼名字?", en: "What's your name?" },
   name_title_join_url: { zh: "輸入名字加入", en: "Enter your name to join" },
@@ -80,6 +80,21 @@ const I18N = {
   },
   host_label: { zh: "主持", en: "Host" },
   me_label: { zh: "我", en: "Me" },
+  confirm_leave_title: { zh: "確認離開?", en: "Leave?" },
+  confirm_leave_host_body: {
+    zh: "你是房主,離開後房間會被解散,其他人會被踢回主畫面。",
+    en: "You're the host — leaving will close the room and send everyone home.",
+  },
+  confirm_leave_guest_body: {
+    zh: "你會離開這個房間,其他人繼續玩。",
+    en: "You'll leave this room. Everyone else keeps playing.",
+  },
+  confirm_leave_offline_body: {
+    zh: "確認結束這場本機 demo?",
+    en: "End this local demo session?",
+  },
+  confirm_leave_yes: { zh: "離開", en: "Leave" },
+  confirm_leave_cancel: { zh: "取消", en: "Cancel" },
 };
 
 function t(key) {
@@ -184,6 +199,66 @@ function escapeHtml(s) {
 
 function wait(ms) {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+// ============================================================
+// Confirm modal — generic yes/cancel dialog
+// ============================================================
+let modalEscapeHandler = null;
+
+function showModal({ titleKey, bodyKey, confirmKey = "confirm_leave_yes",
+                     cancelKey = "confirm_leave_cancel", danger = true,
+                     onConfirm }) {
+  const backdrop = $("#modal-backdrop");
+  if (!backdrop) return;
+
+  setI18n($("#modal-title"), titleKey);
+  setI18n($("#modal-body"), bodyKey);
+  setI18n($("#modal-confirm"), confirmKey);
+  setI18n($("#modal-cancel"), cancelKey);
+  $("#modal-confirm").classList.toggle("danger", !!danger);
+  backdrop.hidden = false;
+
+  const close = () => {
+    backdrop.hidden = true;
+    if (modalEscapeHandler) {
+      document.removeEventListener("keydown", modalEscapeHandler);
+      modalEscapeHandler = null;
+    }
+  };
+
+  modalEscapeHandler = (e) => {
+    if (e.key === "Escape") close();
+  };
+  document.addEventListener("keydown", modalEscapeHandler);
+
+  $("#modal-cancel").onclick = close;
+  $("#modal-confirm").onclick = () => {
+    close();
+    onConfirm?.();
+  };
+  // Click backdrop (but not the card) cancels
+  backdrop.onclick = (e) => {
+    if (e.target === backdrop) close();
+  };
+}
+
+function confirmLeave(onConfirm) {
+  let bodyKey;
+  if (state.mode === "offline") {
+    bodyKey = "confirm_leave_offline_body";
+  } else if (state.mode === "host") {
+    bodyKey = "confirm_leave_host_body";
+  } else {
+    bodyKey = "confirm_leave_guest_body";
+  }
+  showModal({
+    titleKey: "confirm_leave_title",
+    bodyKey,
+    confirmKey: "confirm_leave_yes",
+    cancelKey: "confirm_leave_cancel",
+    onConfirm,
+  });
 }
 
 // ============================================================
@@ -574,7 +649,7 @@ function enterLobby() {
   $("#pin-display").textContent = state.pin;
 
   $("#start-btn").onclick = onStartGame;
-  $("#leave-lobby").onclick = () => goHome(true);
+  $("#leave-lobby").onclick = () => confirmLeave(() => goHome(true));
 
   if (state.mode === "offline") {
     renderOfflineLobby();
@@ -695,7 +770,7 @@ function renderGame(room, isHost) {
     dealNextCard(room);
   };
   $("#btn-next").onclick = guarded;
-  $("#game-leave").onclick = () => goHome(true);
+  $("#game-leave").onclick = () => confirmLeave(() => goHome(true));
 }
 
 async function dealNextCard(room) {
@@ -822,7 +897,7 @@ function enterGameOffline() {
     if (state.animating) return;
     offlineNextCard();
   };
-  $("#game-leave").onclick = () => goHome(true);
+  $("#game-leave").onclick = () => confirmLeave(() => goHome(true));
 }
 
 async function offlineNextCard() {

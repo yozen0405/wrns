@@ -879,6 +879,90 @@ body {
   background: var(--ink-dim);
 }
 
+/* ---------- Confirm modal ---------- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 4, 7, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: modal-fade-in 0.2s ease;
+}
+.modal-backdrop[hidden] { display: none !important; }
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.modal-card {
+  background: linear-gradient(160deg, var(--surface-2) 0%, var(--surface) 100%);
+  border-radius: 22px;
+  padding: 28px 24px 20px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  animation: modal-pop-in 0.28s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+@keyframes modal-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.modal-title {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  margin: 0 0 10px;
+  color: var(--ink);
+  text-align: center;
+}
+.modal-body {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--ink-dim);
+  margin: 0 0 22px;
+  text-align: center;
+  letter-spacing: 1px;
+}
+.modal-actions {
+  display: flex;
+  gap: 10px;
+}
+.modal-actions button {
+  flex: 1;
+  padding: 13px 16px;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+.modal-actions .ghost-btn {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: transparent;
+  color: var(--ink-soft);
+}
+.modal-actions .primary.danger {
+  background: linear-gradient(180deg, #d36a6a 0%, #a64545 100%);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+}
+.modal-actions .primary.danger:hover {
+  background: linear-gradient(180deg, #e07a7a 0%, #b85050 100%);
+}
+
 /* ---------- Toast ---------- */
 .toast {
   position: fixed;
